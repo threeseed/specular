@@ -20,7 +20,7 @@ fn file_urls() {
     );
 }
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod mpris {
     use std::time::{Duration, Instant};
 

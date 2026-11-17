@@ -15,13 +15,13 @@
 //! application handles every platform alike.
 
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 use raw_window_handle::{RawDisplayHandle, RawWindowHandle};
 
 mod swipe;
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod wayland;
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod x11;
 
 pub use swipe::{PageSwipes, SwipeDirection, SwipeSink};
@@ -140,9 +140,9 @@ impl PinchScale {
 /// The listeners work from their threads and stop in `Drop`; nothing reads them.
 #[allow(dead_code)]
 enum Imp {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     Wayland(wayland::Listener),
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     X11(x11::Listener),
     None,
 }
@@ -156,9 +156,9 @@ pub struct TouchpadGestures {
 impl std::fmt::Debug for TouchpadGestures {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self.imp {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::Wayland(_) => "TouchpadGestures(Wayland pointer-gestures)",
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::X11(_) => "TouchpadGestures(XInput 2.4)",
             Imp::None => "TouchpadGestures(none: winit's own or unsupported)",
         })
@@ -173,7 +173,7 @@ impl TouchpadGestures {
             return TouchpadGestures { imp: Imp::None };
         };
         let imp = match (wh.as_raw(), dh.as_raw()) {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Wayland(w), RawDisplayHandle::Wayland(d)) => {
                 match wayland::Listener::new(d.display.as_ptr(), w.surface.as_ptr(), sink) {
                     Ok(l) => Imp::Wayland(l),
@@ -183,12 +183,12 @@ impl TouchpadGestures {
                     }
                 }
             }
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Xlib(w), _) => match u32::try_from(w.window) {
                 Ok(id) => x11_or_none(id, sink),
                 Err(_) => Imp::None,
             },
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Xcb(w), _) => x11_or_none(w.window.get(), sink),
             _ => {
                 drop(sink);
@@ -204,7 +204,7 @@ impl TouchpadGestures {
     }
 }
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 fn x11_or_none(window: u32, sink: Sink) -> Imp {
     match x11::Listener::new(window, sink) {
         Ok(l) => Imp::X11(l),

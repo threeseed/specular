@@ -47,7 +47,7 @@ pub struct NowPlaying {
 }
 
 // macOS has no controls to send to; Windows has no seek signal.
-#[cfg_attr(not(all(unix, not(target_os = "macos"))), allow(dead_code))]
+#[cfg_attr(not(all(unix, not(target_vendor = "apple"))), allow(dead_code))]
 enum Msg {
     Update(NowPlaying),
     /// A jump the user made (MPRIS `Seeked`).
@@ -75,7 +75,7 @@ impl MediaControls {
         if std::env::var_os("SPECULAR_NO_MEDIA_CONTROLS").is_some() || cfg!(test) {
             return None;
         }
-        #[cfg(all(unix, not(target_os = "macos")))]
+        #[cfg(all(unix, not(target_vendor = "apple")))]
         return mpris::start(None, wake);
         #[cfg(windows)]
         return smtc::start(wake);
@@ -125,7 +125,7 @@ pub(crate) fn file_url(path: &std::path::Path) -> String {
     out
 }
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 pub(crate) mod mpris {
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};

@@ -117,7 +117,7 @@ type Make = Box<dyn FnOnce() -> Box<dyn Backend> + Send>;
 
 /// The system's backend, when this platform has one.
 fn system() -> Option<Make> {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return Some(Box::new(|| {
         Box::new(linux::Bus::session()) as Box<dyn Backend>
     }));
@@ -176,7 +176,7 @@ mod windows {
     }
 }
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 pub(crate) mod linux {
     use std::collections::HashMap;
 

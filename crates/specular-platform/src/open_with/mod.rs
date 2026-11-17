@@ -12,7 +12,7 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 pub(crate) mod desktop;
 #[cfg(target_os = "macos")]
 mod macos;
@@ -34,7 +34,7 @@ pub struct Handler {
 #[derive(Clone, Debug, PartialEq)]
 enum How {
     /// Freedesktop: the parsed entry (its `Exec` line, `Path`, icon).
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     Desktop(Box<desktop::DesktopEntry>),
     /// macOS: the app bundle.
     #[cfg(target_os = "macos")]
@@ -49,7 +49,7 @@ enum How {
 /// Applications for `path`, the default first. `ui_lang` (a BCP-47 tag like `de` or
 /// `zh-Hans`) picks localised names where the OS stores several.
 pub fn handlers_for(path: &Path, ui_lang: &str) -> Vec<Handler> {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     {
         let data = desktop::data_dirs();
         let config = desktop::config_dirs();
@@ -82,7 +82,7 @@ pub fn handlers_for(path: &Path, ui_lang: &str) -> Vec<Handler> {
         let _ = ui_lang;
         windows::handlers_for(path)
     }
-    #[cfg(not(any(unix, windows)))]
+    #[cfg(any(target_os = "ios", not(any(unix, windows))))]
     {
         let _ = (path, ui_lang);
         Vec::new()
@@ -92,7 +92,7 @@ pub fn handlers_for(path: &Path, ui_lang: &str) -> Vec<Handler> {
 /// Opens `path` with `h`. Returns once the program has started (or failed to).
 pub fn launch(h: &Handler, path: &Path) -> io::Result<()> {
     match &h.how {
-        #[cfg(all(unix, not(target_os = "macos")))]
+        #[cfg(all(unix, not(target_vendor = "apple")))]
         How::Desktop(e) => {
             let argv = desktop::expand_exec(e, path)
                 .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "bad Exec line"))?;

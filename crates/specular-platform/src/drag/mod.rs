@@ -18,12 +18,12 @@
 use std::path::PathBuf;
 
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 use raw_window_handle::{RawDisplayHandle, RawWindowHandle};
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 pub(crate) mod wayland;
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod x11;
 
 /// The pointer over the window while files from another application are dragged onto it,
@@ -61,9 +61,9 @@ impl std::fmt::Display for DragError {
 impl std::error::Error for DragError {}
 
 enum Imp {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     Wayland(wayland::Source),
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     X11(x11::Source),
     None,
 }
@@ -77,9 +77,9 @@ pub struct DragOut {
 impl std::fmt::Debug for DragOut {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self.imp {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::Wayland(_) => "DragOut(Wayland)",
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::X11(_) => "DragOut(X11)",
             Imp::None => "DragOut(unsupported)",
         })
@@ -94,7 +94,7 @@ impl DragOut {
             return DragOut { imp: Imp::None };
         };
         let imp = match (wh.as_raw(), dh.as_raw()) {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Wayland(w), RawDisplayHandle::Wayland(d)) => {
                 match wayland::Source::new(d.display.as_ptr(), w.surface.as_ptr()) {
                     Ok(s) => Imp::Wayland(s),
@@ -104,12 +104,12 @@ impl DragOut {
                     }
                 }
             }
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Xlib(w), _) => match u32::try_from(w.window) {
                 Ok(id) => Imp::X11(x11::Source::new(id)),
                 Err(_) => Imp::None,
             },
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Xcb(w), _) => Imp::X11(x11::Source::new(w.window.get())),
             _ => Imp::None,
         };
@@ -125,7 +125,7 @@ impl DragOut {
     /// compositor runs the drag and the window simply loses the pointer).
     pub fn active(&self) -> bool {
         match &self.imp {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::X11(s) => s.active(),
             _ => false,
         }
@@ -137,7 +137,7 @@ impl DragOut {
     /// an OLE `IDropTarget` / `NSDraggingDestination` of our own).
     pub fn drop_pointer(&self) -> Option<DropPointer> {
         match &self.imp {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::X11(s) => s.pointer(),
             _ => None,
         }
@@ -152,9 +152,9 @@ impl DragOut {
         }
         let (uris, text) = payload(files);
         match &self.imp {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::Wayland(s) => s.start(uris, text),
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::X11(s) => s.start(uris, text),
             Imp::None => {
                 let _ = (uris, text);

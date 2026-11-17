@@ -13,7 +13,7 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod linux;
 #[cfg(target_os = "macos")]
 pub(crate) mod macos;
@@ -22,34 +22,34 @@ pub(crate) mod windows;
 
 /// Whether "Share…" can work here (a cheap guess; the call itself decides).
 pub fn share_available() -> bool {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::portal_available();
     #[cfg(any(windows, target_os = "macos"))]
     return true;
-    #[cfg(not(any(unix, windows)))]
+    #[cfg(any(target_os = "ios", not(any(unix, windows))))]
     return false;
 }
 
 /// Whether "Send by email" can work here.
 pub fn email_available() -> bool {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return crate::launch::find_program("xdg-email").is_some();
     #[cfg(target_os = "macos")]
     return true;
-    #[cfg(not(unix))]
+    #[cfg(any(target_os = "ios", not(unix)))]
     return false;
 }
 
 /// Linux: lets the user pick an application to open `file` with, through the OpenURI
 /// portal's chooser (works in sandboxes). Blocks until the portal answers.
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 pub fn open_with_chooser(file: &Path) -> io::Result<()> {
     linux::open_file(file)
 }
 
 /// Windows and macOS: the system share sheet for `files`, attached to `window`. Call on the
 /// UI thread.
-#[cfg(not(all(unix, not(target_os = "macos"))))]
+#[cfg(not(all(unix, not(target_vendor = "apple"))))]
 pub fn share(files: &[PathBuf], window: &dyn raw_window_handle::HasWindowHandle) -> io::Result<()> {
     let files = absolute(files)?;
     #[cfg(windows)]
@@ -67,11 +67,11 @@ pub fn share(files: &[PathBuf], window: &dyn raw_window_handle::HasWindowHandle)
 /// until `xdg-email` has handed it over); call off the UI thread.
 pub fn send_by_email(files: &[PathBuf]) -> io::Result<()> {
     let files = absolute(files)?;
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::email(&files);
     #[cfg(target_os = "macos")]
     return macos::email(&files);
-    #[cfg(not(unix))]
+    #[cfg(any(target_os = "ios", not(unix)))]
     {
         let _ = files;
         Err(io::ErrorKind::Unsupported.into())

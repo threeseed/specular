@@ -19,10 +19,10 @@
 //! being painted.
 
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 use raw_window_handle::{RawDisplayHandle, RawWindowHandle};
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod x11;
 
 /// Callback for pressure readings (0 to 1); called on a background thread.
@@ -31,7 +31,7 @@ pub type Sink = Box<dyn Fn(f32) + Send + Sync>;
 /// The listener works from its thread and stops in `Drop`; nothing reads it.
 #[allow(dead_code)]
 enum Imp {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     X11(x11::Listener),
     None,
 }
@@ -44,7 +44,7 @@ pub struct PenPressure {
 impl std::fmt::Debug for PenPressure {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self.imp {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             Imp::X11(_) => "PenPressure(XInput 2 raw events)",
             Imp::None => "PenPressure(none: winit's own, Wayland, or unsupported)",
         })
@@ -60,7 +60,7 @@ impl PenPressure {
             return PenPressure { imp: Imp::None };
         };
         let imp = match (wh.as_raw(), dh.as_raw()) {
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Xlib(_) | RawWindowHandle::Xcb(_), _) => {
                 match x11::Listener::new(sink) {
                     Ok(l) => Imp::X11(l),
@@ -70,7 +70,7 @@ impl PenPressure {
                     }
                 }
             }
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(all(unix, not(target_vendor = "apple")))]
             (RawWindowHandle::Wayland(_), RawDisplayHandle::Wayland(_)) => {
                 specular_log::debug!(target: specular_log::INPUT, "pen pressure: none on Wayland (winit 0.30 has no tablet input)");
                 drop(sink);
