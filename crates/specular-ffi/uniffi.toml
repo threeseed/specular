@@ -1,0 +1,10 @@
+[bindings.swift]
+# The Swift module `Specular` over the C module of the framework (`SpecularFFI`).
+module_name = "Specular"
+ffi_module_name = "SpecularFFI"
+ffi_module_filename = "SpecularFFI"
+generate_module_map = true
+omit_argument_labels = false
+
+[bindings.kotlin]
+package_name = "com.amazynk.specular"

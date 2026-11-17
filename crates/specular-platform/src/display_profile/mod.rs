@@ -11,7 +11,7 @@
 //! Blocking (D-Bus and X round trips, file reads; a few milliseconds): call it off the UI thread
 //! except on macOS.
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod linux;
 #[cfg(target_os = "macos")]
 mod macos;
@@ -43,13 +43,13 @@ pub enum DisplayProfile {
 /// Looks up the colour profile of a display. Never fails; problems are logged and give
 /// [`DisplayProfile::Unknown`].
 pub fn display_profile(query: &DisplayQuery) -> DisplayProfile {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::profile(query);
     #[cfg(target_os = "macos")]
     return macos::profile(query);
     #[cfg(windows)]
     return windows::profile(query);
-    #[cfg(not(any(unix, windows)))]
+    #[cfg(any(target_os = "ios", not(any(unix, windows))))]
     {
         let _ = query;
         DisplayProfile::Unknown

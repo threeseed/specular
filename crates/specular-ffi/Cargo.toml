@@ -1,0 +1,42 @@
+[package]
+name = "specular-ffi"
+description = "Specular's decoders for other apps: open any of its formats, decode levels, regions and frames as GPU-ready planes, through UniFFI (Swift, Kotlin)"
+version.workspace = true
+edition.workspace = true
+publish = false
+license.workspace = true
+
+[lib]
+# `lib` for the tests and the bindgen binary, `staticlib` / `cdylib` for the Apple and Android
+# frameworks (`tools/build-ffi-apple.sh`).
+crate-type = ["lib", "staticlib", "cdylib"]
+name = "specular_ffi"
+
+[[bin]]
+name = "specular-ffi-bindgen"
+path = "src/bin/bindgen.rs"
+required-features = ["bindgen"]
+
+[features]
+bindgen = ["uniffi/cli", "uniffi/cargo-metadata"]
+
+[dependencies]
+specular-core = { path = "../specular-core" }
+specular-decode = { path = "../specular-decode" }
+specular-video = { path = "../specular-video" }
+specular-color = { path = "../specular-color" }
+parking_lot = "0.12"
+thiserror = "2"
+uniffi = { version = "0.32.2", default-features = false }
+
+[dev-dependencies]
+jpeg-encoder = "0.7"
+
+# The UniFFI scaffolding is `unsafe` generated code (UNSAFE.md): the crate allows it at its
+# root instead of inheriting the workspace's `unsafe_code = "deny"`.
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+undocumented_unsafe_blocks = "deny"
+multiple_unsafe_ops_per_block = "deny"

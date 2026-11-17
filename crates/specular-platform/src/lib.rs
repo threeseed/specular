@@ -512,7 +512,7 @@ pub fn main_screen() -> Option<ScreenInfo> {
 }
 
 /// A private D-Bus daemon for tests (and, with `test-support`, other crates' tests).
-#[cfg(all(any(test, feature = "test-support"), unix, not(target_os = "macos")))]
+#[cfg(all(any(test, feature = "test-support"), unix, not(target_vendor = "apple")))]
 #[doc(hidden)]
 pub mod test_bus;
 

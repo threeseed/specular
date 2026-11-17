@@ -23,7 +23,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 pub mod linux;
 pub mod macos;
 pub mod mime;
@@ -237,7 +237,7 @@ impl std::error::Error for Error {}
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 pub(crate) fn io_err(p: &Path) -> impl FnOnce(std::io::Error) -> Error + '_ {
     move |e| Error::Io(p.to_path_buf(), e)
 }
@@ -453,22 +453,22 @@ pub fn user_pictures_dir() -> PathBuf {
 
 /// The options of this platform, in display order (empty where nothing is implemented).
 pub fn options() -> &'static [OptionId] {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return &OptionId::ALL;
     #[cfg(windows)]
     return &[OptionId::RecentFiles];
-    #[cfg(not(any(windows, all(unix, not(target_os = "macos")))))]
+    #[cfg(not(any(windows, all(unix, not(target_vendor = "apple")))))]
     &[]
 }
 
 /// The state of `id`. Reads files only (no programs run): cheap enough for every repaint of
 /// the settings page, but better called off the UI thread.
 pub fn status(env: &Env, id: OptionId) -> Status {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::status(env, id);
     #[cfg(windows)]
     return windows::status(env, id);
-    #[cfg(not(any(windows, all(unix, not(target_os = "macos")))))]
+    #[cfg(not(any(windows, all(unix, not(target_vendor = "apple")))))]
     {
         let _ = env;
         Status {
@@ -481,14 +481,14 @@ pub fn status(env: &Env, id: OptionId) -> Status {
 
 /// Turns `id` on (idempotent: applying again repairs a partial state).
 pub fn apply(env: &Env, id: OptionId, labels: &Labels) -> Result<Status> {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::apply(env, id, labels);
     #[cfg(windows)]
     {
         let _ = labels;
         windows::apply(env, id)
     }
-    #[cfg(not(any(windows, all(unix, not(target_os = "macos")))))]
+    #[cfg(not(any(windows, all(unix, not(target_vendor = "apple")))))]
     {
         let _ = (env, labels, id);
         Err(Error::Unavailable(Unavailable::Platform))
@@ -497,11 +497,11 @@ pub fn apply(env: &Env, id: OptionId, labels: &Labels) -> Result<Status> {
 
 /// Turns `id` off, removing what [`apply`] made and restoring what it changed.
 pub fn remove(env: &Env, id: OptionId) -> Result<Status> {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::remove(env, id);
     #[cfg(windows)]
     return windows::remove(env, id);
-    #[cfg(not(any(windows, all(unix, not(target_os = "macos")))))]
+    #[cfg(not(any(windows, all(unix, not(target_vendor = "apple")))))]
     {
         let _ = (env, id);
         Err(Error::Unavailable(Unavailable::Platform))
@@ -544,7 +544,7 @@ impl WallpaperBackend {
 /// Sets `image` as the desktop background: the Wallpaper portal when there is one, else the
 /// desktop's own mechanism. Blocks (the portal may ask the user); call off the UI thread.
 pub fn set_wallpaper(env: &Env, image: &Path) -> Result<WallpaperBackend> {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::wallpaper::set(env, image);
     #[cfg(windows)]
     {
@@ -560,7 +560,7 @@ pub fn set_wallpaper(env: &Env, image: &Path) -> Result<WallpaperBackend> {
             .map(|_| WallpaperBackend::MacOs)
             .map_err(|e| Error::Io(image.to_path_buf(), e))
     }
-    #[cfg(not(any(unix, windows)))]
+    #[cfg(any(target_os = "ios", not(any(unix, windows))))]
     {
         let _ = (env, image);
         Err(Error::Unavailable(Unavailable::Platform))
@@ -569,14 +569,14 @@ pub fn set_wallpaper(env: &Env, image: &Path) -> Result<WallpaperBackend> {
 
 /// Whether "Set as wallpaper" can work here (a cheap guess; the call itself decides).
 pub fn wallpaper_available(env: &Env) -> bool {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return linux::wallpaper::available(env);
     #[cfg(any(windows, target_os = "macos"))]
     {
         let _ = env;
         true
     }
-    #[cfg(not(any(unix, windows)))]
+    #[cfg(any(target_os = "ios", not(any(unix, windows))))]
     {
         let _ = env;
         false

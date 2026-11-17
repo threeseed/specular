@@ -13,7 +13,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod linux;
 #[cfg(test)]
 mod tests;
@@ -83,11 +83,11 @@ impl std::error::Error for Error {}
 /// Whether [`print`] has a way to print at all (to enable the Print button; cheap, no D-Bus
 /// round trip: a session bus counts, whether its portal can print is only known by trying).
 pub fn available() -> bool {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     {
         linux::available()
     }
-    #[cfg(not(all(unix, not(target_os = "macos"))))]
+    #[cfg(not(all(unix, not(target_vendor = "apple"))))]
     {
         false
     }
@@ -96,11 +96,11 @@ pub fn available() -> bool {
 /// Prints `pdf` (blocks until the system dialog is answered and the job is handed over; call
 /// off the UI thread). The file may be removed once this returns.
 pub fn print(pdf: &Path, job: &Job) -> Result<Printed, Error> {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     {
         linux::print(pdf, job)
     }
-    #[cfg(not(all(unix, not(target_os = "macos"))))]
+    #[cfg(not(all(unix, not(target_vendor = "apple"))))]
     {
         let _ = (pdf, job);
         Err(Error::Unsupported)
@@ -122,11 +122,11 @@ pub enum Borderless {
 /// off the UI thread). Linux and the BSDs ask CUPS (`lpoptions -l`); elsewhere, and when
 /// that fails, [`Borderless::Unknown`]: never guessed.
 pub fn borderless() -> Borderless {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     {
         linux::borderless()
     }
-    #[cfg(not(all(unix, not(target_os = "macos"))))]
+    #[cfg(not(all(unix, not(target_vendor = "apple"))))]
     {
         Borderless::Unknown
     }
@@ -178,7 +178,7 @@ pub fn borderless_from_lpoptions(text: &str) -> Borderless {
 }
 
 /// `program` on `PATH`, if it is there.
-#[cfg_attr(not(all(unix, not(target_os = "macos"))), allow(dead_code))]
+#[cfg_attr(not(all(unix, not(target_vendor = "apple"))), allow(dead_code))]
 pub(crate) fn find_program(program: &str) -> Option<PathBuf> {
     let path = std::env::var_os("PATH")?;
     std::env::split_paths(&path)

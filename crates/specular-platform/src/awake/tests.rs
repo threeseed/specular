@@ -54,7 +54,7 @@ fn tests_never_reach_the_system() {
     assert!(a.tx.is_none());
 }
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod bus {
     use std::collections::HashMap;
 

@@ -70,7 +70,7 @@ impl DesktopAction {
     }
 
     /// Used where labels are read back (Linux desktop entries).
-    #[cfg_attr(not(all(unix, not(target_os = "macos"))), allow(dead_code))]
+    #[cfg_attr(not(all(unix, not(target_vendor = "apple"))), allow(dead_code))]
     pub(crate) fn set_label(self, labels: &mut Labels, v: &str) {
         let slot = match self {
             DesktopAction::NewWindow => &mut labels.new_window,

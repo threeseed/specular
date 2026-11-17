@@ -53,25 +53,25 @@ pub struct OpenFile<'a> {
 
 /// Whether the portal is likely there (its D-Bus service is installed and a bus runs).
 pub fn portal_available() -> bool {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return crate::share::share_available();
-    #[cfg(not(all(unix, not(target_os = "macos"))))]
+    #[cfg(not(all(unix, not(target_vendor = "apple"))))]
     return false;
 }
 
 /// Shows the portal's Open dialog: `Ok(None)` when the user cancels, an error when there is
 /// no portal or it fails (the caller falls back to another dialog).
 pub fn open_file(req: &OpenFile<'_>) -> std::io::Result<Option<PathBuf>> {
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     return portal::open_file(req);
-    #[cfg(not(all(unix, not(target_os = "macos"))))]
+    #[cfg(not(all(unix, not(target_vendor = "apple"))))]
     {
         let _ = req;
         Err(std::io::Error::from(std::io::ErrorKind::Unsupported))
     }
 }
 
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(all(unix, not(target_vendor = "apple")))]
 mod portal {
     use std::collections::HashMap;
     use std::io;
@@ -190,7 +190,7 @@ mod tests {
     /// The options name the first filter as the current one, with the very same contents
     /// (KDE selects it by equality), and the folder as a NUL-terminated byte string. Nothing
     /// is sent: no dialog opens.
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(all(unix, not(target_vendor = "apple")))]
     #[test]
     fn options_select_the_current_filter() {
         use zbus::zvariant::Value;
